@@ -1,12 +1,7 @@
 package models
 
 type User struct {
-	Login    string
-	Email    string
-	Password string
-}
-
-type EntryInfo struct {
-	Login    string
-	Password string
+	Nickname string `json:"nickname" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }

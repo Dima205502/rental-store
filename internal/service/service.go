@@ -50,15 +50,16 @@ func (u UserManager) CreateUser(ctx context.Context, user models.User) error {
 	return nil
 }
 
-func (s *SessionManager) CreateSession(ctx context.Context, user models.EntryInfo) (string, error) {
-	id, password, err := s.finderRepo.FindPassword(ctx, user.Login)
+func (s *SessionManager) CreateSession(ctx context.Context, user models.User) (string, error) {
+	id, password, err := s.finderRepo.FindPassword(ctx, user.Email)
 
 	if err != nil {
 		slog.Error("Service layer", slog.String("place", "FindPassword"), slog.String("error", err.Error()))
 		return "", err
 	}
 
-	err = utils.ComparePassword(user.Password, password)
+	err = utils.ComparePassword(password, user.Password)
+
 	if err != nil {
 		return "", errors.New("wrong password")
 	}
@@ -80,6 +81,7 @@ func (s *SessionManager) CreateSession(ctx context.Context, user models.EntryInf
 }
 
 func (s *SessionManager) DeleteSession(ctx context.Context, token string) error {
+	slog.Debug(token)
 	err := s.sessionRepo.DeleteSession(ctx, token)
 	if err != nil {
 		slog.Error("Service layer", slog.String("place", "DeleteSession"), slog.String("error", err.Error()))
@@ -88,10 +90,17 @@ func (s *SessionManager) DeleteSession(ctx context.Context, token string) error 
 }
 
 func (e *EmailManager) CheckSend(ctx context.Context, token string) error {
-	email, err := e.finderRepo.FindEmail(ctx, token)
+	user_id, err := e.finderRepo.FindUserId(ctx, token)
 
 	if err != nil {
-		slog.Error("Service layer", slog.String("place", "FindSession"), slog.String("error", err.Error()))
+		slog.Error("Service layer", slog.String("place", "FindUserId"), slog.String("error", err.Error()))
+		return err
+	}
+
+	email, err := e.finderRepo.FindEmail(ctx, user_id)
+
+	if err != nil {
+		slog.Error("Service layer", slog.String("place", "FindUserId"), slog.String("error", err.Error()))
 		return err
 	}
 

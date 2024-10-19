@@ -7,7 +7,10 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/go-playground/validator"
 )
 
 func NewAuthManager(creater *service.UserManager, session *service.SessionManager, checker *service.EmailManager) *AuthManager {
@@ -34,6 +37,14 @@ func Signup(a *AuthManager) http.HandlerFunc {
 			return
 		}
 
+		err = validator.New().Struct(user)
+
+		if err != nil {
+			slog.Error("Signup", slog.String("place", "validate"), slog.String("error", err.Error()))
+			http.Error(w, "Error validate JSON", http.StatusBadRequest)
+			return
+		}
+
 		err = a.creater.CreateUser(ctx, user)
 
 		if err != nil {
@@ -57,9 +68,9 @@ func Signin(a *AuthManager) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
 		defer cancel()
 
-		var entryInfo models.EntryInfo
+		var user models.User
 
-		err := json.NewDecoder(r.Body).Decode(&entryInfo)
+		err := json.NewDecoder(r.Body).Decode(&user)
 
 		if err != nil {
 			slog.Error("Signin", slog.String("place", "Decoder"), slog.String("error", err.Error()))
@@ -67,7 +78,15 @@ func Signin(a *AuthManager) http.HandlerFunc {
 			return
 		}
 
-		token, err := a.session.CreateSession(ctx, entryInfo)
+		err = validator.New().Struct(user)
+
+		if err != nil {
+			slog.Error("Signin", slog.String("place", "validate"), slog.String("error", err.Error()))
+			http.Error(w, "Error validate JSON", http.StatusBadRequest)
+			return
+		}
+
+		token, err := a.session.CreateSession(ctx, user)
 
 		if err != nil {
 			slog.Error("Signin", slog.String("place", "CreateSession"), slog.String("error", err.Error()))
@@ -105,7 +124,7 @@ func Logout(a *AuthManager) http.HandlerFunc {
 			return
 		}
 
-		err = a.session.DeleteSession(ctx, cookie.Name)
+		err = a.session.DeleteSession(ctx, cookie.Value)
 
 		if err != nil {
 			slog.Error("Logout", slog.String("place", "DeleteSession"), slog.String("error", err.Error()))
@@ -135,16 +154,9 @@ func VerifyEmail(a *AuthManager) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
 		defer cancel()
 
-		err := r.ParseForm()
-		if err != nil {
-			slog.Error("VerifyEmail", slog.String("place", "ParseForm"), slog.String("error", err.Error()))
-			http.Error(w, "Unable to parse form", http.StatusBadRequest)
-			return
-		}
+		token := strings.TrimSpace(r.FormValue("token"))
 
-		token := r.FormValue("token")
-
-		err = a.checker.CheckSend(ctx, token)
+		err := a.checker.CheckSend(ctx, token)
 
 		if err != nil {
 			slog.Error("VerifyEmail", slog.String("place", "CheckSend"), slog.String("error", err.Error()))

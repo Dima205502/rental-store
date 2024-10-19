@@ -55,18 +55,16 @@ func (s *Storage) CreateUserTokenTx(ctx context.Context, user models.User) (stri
 	}
 
 	err = s.ExecTx(ctx, func(tx *sql.Tx) error {
-		res, err := tx.ExecContext(ctx, "INSERT INTO users(login,email,password) VALUES($1, $2, $3)", user.Email, user.Login, user.Password)
-		if err != nil {
-			return err
-		}
+		row := tx.QueryRowContext(ctx, "INSERT INTO users(nickname,email,password) VALUES($1, $2, $3) RETURNING id;", user.Nickname, user.Email, user.Password)
 
-		user_id, err := res.LastInsertId()
+		var id int
+		err = row.Scan(&id)
 
 		if err != nil {
 			return err
 		}
 
-		_, err = tx.ExecContext(ctx, "INSERT INTO email_token(user_id, token)", user_id, token)
+		_, err = tx.ExecContext(ctx, "INSERT INTO email_token(user_id, token) VALUES($1, $2);", id, token)
 
 		return err
 	})
@@ -76,11 +74,11 @@ func (s *Storage) CreateUserTokenTx(ctx context.Context, user models.User) (stri
 
 func (s *Storage) VerifyUserTx(ctx context.Context, email, token string) error {
 	err := s.ExecTx(ctx, func(tx *sql.Tx) error {
-		_, err := s.db.ExecContext(ctx, "UPDATE users SET verify=true WHERE email=$1", email)
+		_, err := s.db.ExecContext(ctx, "UPDATE users SET verify=true WHERE email=$1;", email)
 		if err != nil {
 			return err
 		}
-		_, err = s.db.ExecContext(ctx, "DELETE FROM email_token WHERE token=$1", token)
+		_, err = s.db.ExecContext(ctx, "DELETE FROM email_token WHERE token=$1;", token)
 
 		return err
 	})
@@ -89,30 +87,37 @@ func (s *Storage) VerifyUserTx(ctx context.Context, email, token string) error {
 }
 
 func (s *Storage) CreateSession(ctx context.Context, user_id int, token string) error {
-	_, err := s.db.ExecContext(ctx, "INSERT INTO sessions(email, token) VALUES($1, $2)", user_id, token)
+	_, err := s.db.ExecContext(ctx, "INSERT INTO sessions(user_id, token) VALUES($1, $2);", user_id, token)
 	return err
 }
 
 func (s *Storage) DeleteSession(ctx context.Context, token string) error {
-	_, err := s.db.ExecContext(ctx, "DELETE FROM sessions WHERE token=$1", token)
+	_, err := s.db.ExecContext(ctx, "DELETE FROM sessions WHERE token=$1;", token)
 	return err
 }
 
 func (s *Storage) FindPassword(ctx context.Context, email string) (int, string, error) {
-	row := s.db.QueryRowContext(ctx, "SELECT id, password FROM users WHERE email=$1 AND verify=true", email)
+	row := s.db.QueryRowContext(ctx, "SELECT id, password FROM users WHERE email = $1 AND verify=TRUE;", email)
 	id, password := 0, ""
 	err := row.Scan(&id, &password)
 	return id, password, err
 }
 
-func (s *Storage) FindEmail(ctx context.Context, token string) (string, error) {
-	row := s.db.QueryRowContext(ctx, "SELECT email FROM email_token WHERE token=$1", token)
+func (s *Storage) FindUserId(ctx context.Context, token string) (int, error) {
+
+	row := s.db.QueryRowContext(ctx, "SELECT user_id FROM email_token WHERE token = $1;", token)
+
+	var user_id int
+	err := row.Scan(&user_id)
+
+	return user_id, err
+}
+
+func (s *Storage) FindEmail(ctx context.Context, id int) (string, error) {
+	row := s.db.QueryRowContext(ctx, "SELECT email FROM users WHERE id = $1;", id)
 
 	var email string
 	err := row.Scan(&email)
-	if err != nil {
-		return "", err
-	}
 
 	return email, err
 }
