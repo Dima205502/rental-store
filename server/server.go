@@ -7,6 +7,7 @@ import (
 	"auth_service/internal/service"
 	"log/slog"
 	"net/http"
+	"strconv"
 )
 
 func Start(cfg *config.Config) error {
@@ -27,5 +28,5 @@ func Start(cfg *config.Config) error {
 
 	slog.Debug("starting the server")
 
-	return http.ListenAndServe(":8080", nil)
+	return http.ListenAndServe(cfg.Server.Host+":"+strconv.Itoa(cfg.Server.Port), nil)
 }
