@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"auth_service/config"
 	"auth_service/internal/models"
 	"auth_service/utils"
 	"context"
@@ -11,9 +12,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func NewStorage() *Storage {
+func NewStorage(cfg config.DB) *Storage {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		"localhost", 5432, "KinDeR", "Dimaaaa", "draft")
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Dbname)
 	var err error
 
 	DB, err := sql.Open("postgres", psqlInfo)

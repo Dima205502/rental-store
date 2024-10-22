@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Магазин аренды и продажи вещей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 50px 0;
+        }
+        nav {
+            background: #444;
+            padding: 20px 0;
+        }
+        nav ul {
+            display: flex;
+            justify-content: space-around;
+            list-style-type: none;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        nav a:hover {
+            background-color: #555;
+        }
+        main {
+            min-height: 300px;
+        }
+        article {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Магазин аренды и продажи вещей</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="/signup">Регистрация</a></li>
+            <li><a href="/signin">Вход</a></li>
+            <li><a href="/verify-email">Подтверждение email</a></li>
+            <li><a href="/logout">Выход</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <h2>Добро пожаловать!</h2>
+            <p>Здесь вы можете найти широкий выбор одежды, обувки и аксессуаров.</p>
+            <p>Наша команда всегда стремится предложить лучшие цены и высокое качество товаров.</p>
+            <p>Не забудьте проверить раздел "Акции", где мы регулярно проводим распродажи!</p>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Магазин аренды и продажи вещей. Все права защищены.</p>
+    </footer>
+</body>
+</html>

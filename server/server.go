@@ -1,6 +1,7 @@
 package server
 
 import (
+	"auth_service/config"
 	"auth_service/internal/controller"
 	"auth_service/internal/repository"
 	"auth_service/internal/service"
@@ -8,8 +9,8 @@ import (
 	"net/http"
 )
 
-func Start() error {
-	storage := repository.NewStorage()
+func Start(cfg *config.Config) error {
+	storage := repository.NewStorage(cfg.DB)
 
 	userManager := service.NewUserManager(storage)
 	sessionManager := service.NewSessionManager(storage)

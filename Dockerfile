@@ -1,8 +1,8 @@
 FROM postgres:latest
 
 ENV POSTGRES_USER="KinDeR"
-ENV POSTGRES_PASSWORD="Dimaaaa"
-ENV POSTGRES_DB="draft"
+ENV POSTGRES_PASSWORD="Ajklsdha"
+ENV POSTGRES_DB="Auth"
 
 COPY init.sql /docker-entrypoint-initdb.d/
 
