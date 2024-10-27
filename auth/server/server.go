@@ -26,7 +26,7 @@ func Start(cfg *config.Config) error {
 	http.HandleFunc("/logout", controller.Logout(authManager))
 	http.HandleFunc("/verify-email", controller.VerifyEmail(authManager))
 
-	slog.Debug("starting the server")
+	slog.Debug("Starting the server")
 
 	return http.ListenAndServe(cfg.Server.Host+":"+strconv.Itoa(cfg.Server.Port), nil)
 }

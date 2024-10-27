@@ -33,7 +33,7 @@ type Server struct {
 func Init() *Config {
 	var cfg Config
 
-	err := cleanenv.ReadConfig("/home/kinder/rental-store/config.json", &cfg)
+	err := cleanenv.ReadConfig("/home/kinder/rental-store/auth/config.json", &cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
