@@ -1,0 +1,5 @@
+docker exec -it <имя контейнера>  bash
+cd /
+cd usr/bin
+./kafka-topics --create --bootstrap-server localhost:9092 --topic EmailMsg --partitions 3 --replication-factor 1
+./kafka-topics --list --bootstrap-server localhost:9092
