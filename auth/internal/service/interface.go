@@ -17,3 +17,7 @@ type RepoFinder interface {
 	FindEmail(context.Context, int) (string, error)
 	FindUserId(context.Context, string) (int, error)
 }
+
+type Sender interface {
+	Send(string, string) error
+}

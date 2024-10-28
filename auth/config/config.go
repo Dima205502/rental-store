@@ -9,12 +9,10 @@ import (
 )
 
 type Config struct {
-	DB          `json:"db"`
-	Server      `json:"server"`
-	Sender      string `json:"sender"`
-	AppPassword string `json:"app_password"`
-	SmtpHost    string `json:"smtp_host"`
-	SmtpPort    int    `json:"smtp_port"`
+	DB           `json:"db"`
+	Server       `json:"server"`
+	Broker_addrs []string `json:"broker_addrs"`
+	Topic        string   `json:"topic"`
 }
 
 type DB struct {

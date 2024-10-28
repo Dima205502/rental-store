@@ -9,16 +9,16 @@ import (
 	"log/slog"
 )
 
-func NewUserManager(storage *repository.Storage) *UserManager {
-	return &UserManager{createrRepo: storage}
+func NewUserManager(storage *repository.Storage, notifier *repository.Notifier) *UserManager {
+	return &UserManager{createrRepo: storage, notifier: notifier}
 }
 
 func NewSessionManager(storage *repository.Storage) *SessionManager {
 	return &SessionManager{sessionRepo: storage, finderRepo: storage}
 }
 
-func NewEmailManager(storage *repository.Storage) *EmailManager {
-	return &EmailManager{finderRepo: storage, userTokenRepo: storage}
+func NewEmailManager(storage *repository.Storage, notifier *repository.Notifier) *EmailManager {
+	return &EmailManager{finderRepo: storage, userTokenRepo: storage, notifier: notifier}
 }
 
 func (u UserManager) CreateUser(ctx context.Context, user models.User) error {
@@ -38,14 +38,15 @@ func (u UserManager) CreateUser(ctx context.Context, user models.User) error {
 		return err
 	}
 
-	msg := "Subject: Verify Email\nClick on the link to confirm your email\nhttp://localhost:8080/verify-email?token=" + token
+	msg := "Subject: Verify Email\nClick on the link to confirm your email\nhttp://172.17.0.1:8080/verify-email?token=" + token
 
-	err = utils.Send(ctx, user.Email, msg)
+	go func() {
+		err = u.notifier.Send(user.Email, msg)
 
-	if err != nil {
-		slog.Error("Service layer", slog.String("place", "Send"), slog.String("error", err.Error()))
-		return err
-	}
+		if err != nil {
+			slog.Error("Service layer", slog.String("place", "Send"), slog.String("error", err.Error()))
+		}
+	}()
 
 	return nil
 }
@@ -113,12 +114,13 @@ func (e *EmailManager) CheckSend(ctx context.Context, token string) error {
 
 	msg := "Subject: Create Account\nYou have successfully registered!"
 
-	err = utils.Send(ctx, email, msg)
+	go func() {
+		err = e.notifier.Send(email, msg)
 
-	if err != nil {
-		slog.Error("Service layer", slog.String("place", "Send"), slog.String("error", err.Error()))
-		return err
-	}
+		if err != nil {
+			slog.Error("Service layer", slog.String("place", "Send"), slog.String("error", err.Error()))
+		}
+	}()
 
-	return err
+	return nil
 }

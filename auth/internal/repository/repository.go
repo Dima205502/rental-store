@@ -8,7 +8,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"log/slog"
 
+	"github.com/IBM/sarama"
 	_ "github.com/lib/pq"
 )
 
@@ -20,7 +22,7 @@ func NewStorage(cfg config.DB) *Storage {
 	DB, err := sql.Open("postgres", psqlInfo)
 
 	if err != nil {
-		panic("coudn't connect to database")
+		log.Fatal("Couldn't ping database:", err)
 	}
 
 	err = DB.Ping()
@@ -29,6 +31,22 @@ func NewStorage(cfg config.DB) *Storage {
 	}
 
 	return &Storage{DB}
+}
+
+func NewNotifier(cfg *config.Config) *Notifier {
+	config := sarama.NewConfig()
+
+	config.Producer.RequiredAcks = sarama.NoResponse
+	config.Producer.Retry.Max = 0
+	config.Producer.Return.Successes = true
+
+	producer, err := sarama.NewSyncProducer(cfg.Broker_addrs, config)
+
+	if err != nil {
+		log.Fatal("Couldn't create producer:", err)
+	}
+
+	return &Notifier{producer, cfg.Topic}
 }
 
 func (s *Storage) ExecTx(ctx context.Context, fn func(*sql.Tx) error) error {
@@ -121,4 +139,23 @@ func (s *Storage) FindEmail(ctx context.Context, id int) (string, error) {
 	err := row.Scan(&email)
 
 	return email, err
+}
+
+func (p *Notifier) Send(email, text string) error {
+
+	msg := &sarama.ProducerMessage{
+		Topic: p.topic,
+		Value: sarama.StringEncoder(text),
+		Headers: []sarama.RecordHeader{{
+			Key:   []byte("Email"),
+			Value: []byte(email),
+		},
+		},
+	}
+
+	partition, offset, err := p.producer.SendMessage(msg)
+
+	slog.Info(fmt.Sprintf("%+v", msg), slog.Int("partition", int(partition)), slog.Int("offset", int(offset)))
+
+	return err
 }

@@ -12,10 +12,11 @@ import (
 
 func Start(cfg *config.Config) error {
 	storage := repository.NewStorage(cfg.DB)
+	notifier := repository.NewNotifier(cfg)
 
-	userManager := service.NewUserManager(storage)
 	sessionManager := service.NewSessionManager(storage)
-	emailManager := service.NewEmailManager(storage)
+	userManager := service.NewUserManager(storage, notifier)
+	emailManager := service.NewEmailManager(storage, notifier)
 
 	authManager := controller.NewAuthManager(userManager, sessionManager, emailManager)
 
