@@ -26,6 +26,7 @@ func Start(cfg *config.Config) error {
 	http.HandleFunc("/signin", controller.Signin(authManager))
 	http.HandleFunc("/logout", controller.Logout(authManager))
 	http.HandleFunc("/verify-email", controller.VerifyEmail(authManager))
+	http.HandleFunc("/check-auth", controller.CheckAuth(authManager))
 
 	slog.Debug("Starting the server")
 

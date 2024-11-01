@@ -122,9 +122,26 @@ func (s *Storage) FindPassword(ctx context.Context, email string) (int, string, 
 	return id, password, err
 }
 
-func (s *Storage) FindUserId(ctx context.Context, token string) (int, error) {
+func (s *Storage) FindSession(ctx context.Context, user_id int) (string, error) {
+	row := s.db.QueryRowContext(ctx, "SELECT token FROM sessions WHERE user_id = $1", user_id)
+	var token string
+	err := row.Scan(&token)
+	return token, err
+}
+
+func (s *Storage) FindUserIdByToken(ctx context.Context, token string) (int, error) {
 
 	row := s.db.QueryRowContext(ctx, "SELECT user_id FROM email_token WHERE token = $1;", token)
+
+	var user_id int
+	err := row.Scan(&user_id)
+
+	return user_id, err
+}
+
+func (s *Storage) FindUserIdByNick(ctx context.Context, nickname string) (int, error) {
+
+	row := s.db.QueryRowContext(ctx, "SELECT id FROM users WHERE nickname = $1;", nickname)
 
 	var user_id int
 	err := row.Scan(&user_id)

@@ -90,8 +90,30 @@ func (s *SessionManager) DeleteSession(ctx context.Context, token string) error 
 	return err
 }
 
+func (s *SessionManager) FindSession(ctx context.Context, possibleToken, nickname string) error {
+	slog.Debug(possibleToken)
+
+	id, err := s.finderRepo.FindUserIdByNick(ctx, nickname)
+	if err != nil {
+		slog.Error("Service layer", slog.String("place", "FindSession"), slog.String("error", err.Error()))
+		return err
+	}
+
+	realToken, err := s.finderRepo.FindSession(ctx, id)
+	if err != nil {
+		slog.Error("Service layer", slog.String("place", "FindSession"), slog.String("error", err.Error()))
+		return err
+	}
+
+	if realToken == possibleToken {
+		return nil
+	}
+
+	return errors.New("token is fake")
+}
+
 func (e *EmailManager) CheckSend(ctx context.Context, token string) error {
-	user_id, err := e.finderRepo.FindUserId(ctx, token)
+	user_id, err := e.finderRepo.FindUserIdByToken(ctx, token)
 
 	if err != nil {
 		slog.Error("Service layer", slog.String("place", "FindUserId"), slog.String("error", err.Error()))

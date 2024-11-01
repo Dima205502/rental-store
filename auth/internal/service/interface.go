@@ -15,7 +15,9 @@ type RepoManager interface {
 type RepoFinder interface {
 	FindPassword(context.Context, string) (int, string, error)
 	FindEmail(context.Context, int) (string, error)
-	FindUserId(context.Context, string) (int, error)
+	FindUserIdByToken(context.Context, string) (int, error)
+	FindUserIdByNick(context.Context, string) (int, error)
+	FindSession(context.Context, int) (string, error)
 }
 
 type Sender interface {

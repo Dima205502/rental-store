@@ -101,6 +101,18 @@ func Signin(a *AuthManager) http.HandlerFunc {
 			HttpOnly: true,
 		})
 
+		http.SetCookie(w, &http.Cookie{
+			Name:     "nickname",
+			Value:    user.Nickname,
+			HttpOnly: true,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "email",
+			Value:    user.Email,
+			HttpOnly: true,
+		})
+
 		w.WriteHeader(http.StatusCreated)
 	}
 }
@@ -138,6 +150,44 @@ func Logout(a *AuthManager) http.HandlerFunc {
 			Expires:  time.Now().Add(-time.Hour),
 			HttpOnly: true,
 		})
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func CheckAuth(a *AuthManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			slog.Error("VerifyEmail", slog.String("expected", http.MethodGet), slog.String("received", r.Method))
+			http.Error(w, "Unsupported method", http.StatusMethodNotAllowed)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+		defer cancel()
+
+		tokenCookie, err := r.Cookie("session_token")
+
+		if err != nil {
+			slog.Error("CheckAuth", slog.String("place", "Cookie read"), slog.String("error", err.Error()))
+			http.Error(w, "Unread cookie", http.StatusBadRequest)
+			return
+		}
+
+		nickCookie, err := r.Cookie("nickname")
+
+		if err != nil {
+			slog.Error("CheckAuth", slog.String("place", "Cookie read"), slog.String("error", err.Error()))
+			http.Error(w, "Unread cookie", http.StatusBadRequest)
+			return
+		}
+
+		err = a.session.FindSession(ctx, tokenCookie.Value, nickCookie.Value)
+
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}
