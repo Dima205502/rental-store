@@ -38,7 +38,7 @@ func (u UserManager) CreateUser(ctx context.Context, user models.User) error {
 		return err
 	}
 
-	msg := "Subject: Verify Email\nClick on the link to confirm your email\nhttp://172.17.0.1:8080/verify-email?token=" + token
+	msg := "Subject: Verify Email\nClick on the link to confirm your email\nhttp://172.17.0.1:80/verify-email?token=" + token
 
 	go func() {
 		err = u.notifier.Send(user.Email, msg)
