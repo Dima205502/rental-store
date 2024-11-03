@@ -2,17 +2,17 @@ package controller
 
 import (
 	"context"
-	"shop/models"
+	"shop/internal/models"
 )
 
 type thingManager interface {
-	createThing(context.Context, models.Thing) error
-	remuveThing()
-	buyThing()
+	CreateThing(context.Context, models.Thing) error
+	RemuveThing(context.Context, string, int) error
+	BuyThing(context.Context, models.BuyThingRequest, string, string) error
 }
 
 type thingGetter interface {
-	getAllThings()
-	getRentalThings()
-	getSaleThing()
+	GetAllThings(context.Context) ([]models.Thing, error)
+	GetRentalThings(context.Context, string) ([]models.RentalThing, error)
+	GetSaleThings(context.Context, string) ([]models.Thing, error)
 }
