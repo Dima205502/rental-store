@@ -1,11 +1,11 @@
 package models
 
 type Thing struct {
-	Owner       string `json:"owner" validate:"required"`
+	Owner       string `json:"owner"`
 	Type        string `json:"type" validate:"required"`
 	Description string `json:"description"`
 	Price       int    `json:"price" validate:"required"`
-	Available   bool   `json:"available" validate:"required"`
+	Available   bool   `json:"available"`
 }
 
 type RentalThing struct {
@@ -25,7 +25,7 @@ type BuyThingRequest struct {
 }
 
 type TimeInterval struct {
-	Months int `json:"months" validate:"required"`
-	Days   int `json:"days" validate:"required"`
-	Hours  int `json:"hours" validate:"required"`
+	Months int `json:"months"`
+	Days   int `json:"days"`
+	Hours  int `json:"hours"`
 }

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
+	_ "github.com/lib/pq"
 )
 
 func NewStorage(cfg config.DB) *Storage {
@@ -49,6 +50,23 @@ func NewNotifier(cfg *config.Config) *Notifier {
 	return &Notifier{producer, cfg.Topic}
 }
 
+func (s *Storage) ExecTx(ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted, ReadOnly: false})
+	if err != nil {
+		return err
+	}
+
+	err = fn(tx)
+
+	if err == nil {
+		err = tx.Commit()
+	} else {
+		tx.Rollback()
+	}
+
+	return err
+}
+
 func (s *Storage) CreateThing(ctx context.Context, thing models.Thing) error {
 	_, err := s.db.ExecContext(ctx, "INSERT INTO things(owner,type,description,price) VALUES($1, $2, $3, $4);", thing.Owner, thing.Type, thing.Description, thing.Price)
 
@@ -71,10 +89,18 @@ func (s *Storage) RemuveThing(ctx context.Context, nickname string, thingId int)
 	return err
 }
 
-func (s *Storage) BuyThing(ctx context.Context, thingId int, finishTime time.Time, nickname, email string) error {
+func (s *Storage) BuyThingTx(ctx context.Context, thingId int, finishTime time.Time, nickname, email string) error {
 	finishTimeSQL := finishTime.Format("2006-01-02 15:04:05")
 
-	_, err := s.db.ExecContext(ctx, "INSERT INTO taken_things(thing_id, buyer, email, finish_time) VALUES($1,$2,$3,$4);", thingId, nickname, email, finishTimeSQL)
+	err := s.ExecTx(ctx, func(tx *sql.Tx) error {
+		_, err := s.db.ExecContext(ctx, "INSERT INTO taken_things(thing_id, buyer, email, finish_time) VALUES($1,$2,$3,$4);", thingId, nickname, email, finishTimeSQL)
+		if err != nil {
+			return err
+		}
+		_, err = s.db.ExecContext(ctx, "UPDATE things SET available=false WHERE id=$1", thingId)
+
+		return err
+	})
 
 	return err
 }

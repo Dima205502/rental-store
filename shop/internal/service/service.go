@@ -34,7 +34,7 @@ func (t *ThingManagerService) BuyThing(ctx context.Context, buyThng models.BuyTh
 
 	finishTime := time.Now().AddDate(0, months, days).Add(time.Duration(hours) * time.Hour)
 
-	err := t.thingManagerRepo.BuyThing(ctx, thingId, finishTime, nickname, email)
+	err := t.thingManagerRepo.BuyThingTx(ctx, thingId, finishTime, nickname, email)
 
 	if err != nil {
 		slog.Error("BuyThing", slog.String("error", err.Error()))
@@ -42,11 +42,12 @@ func (t *ThingManagerService) BuyThing(ctx context.Context, buyThng models.BuyTh
 	}
 
 	go func() {
-		msg := fmt.Sprintf("Subject: Purchase Notification\nYou rented an thing with the code %d, the rental deadline id %s", thingId, finishTime.Format("2006-01-02 15:04:05"))
-		err := t.notifier.Send(msg, email)
+		msg := fmt.Sprintf("Subject: Purchase Notification\nYou rented an thing with the code %d, the rental deadline is %s", thingId, finishTime.Format("2006-01-02 15:04:05"))
+		slog.Info("Before Send", slog.String("text", msg))
+		err := t.notifier.Send(email, msg)
 
 		if err != nil {
-			slog.Error("BuThing", slog.String("place", "Send"), slog.String("error", err.Error()))
+			slog.Error("BuyThing", slog.String("place", "Send"), slog.String("error", err.Error()))
 		}
 	}()
 

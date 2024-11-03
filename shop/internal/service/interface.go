@@ -9,7 +9,7 @@ import (
 type thingManagerRepo interface {
 	CreateThing(context.Context, models.Thing) error
 	RemuveThing(context.Context, string, int) error
-	BuyThing(context.Context, int, time.Time, string, string) error
+	BuyThingTx(context.Context, int, time.Time, string, string) error
 }
 
 type thingGetterRepo interface {

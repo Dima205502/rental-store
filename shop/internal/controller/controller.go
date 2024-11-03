@@ -44,6 +44,16 @@ func AddThing(s *ShopManager) http.HandlerFunc {
 			return
 		}
 
+		nickCookie, err := r.Cookie("nickname")
+
+		if err != nil {
+			slog.Error("AddThing", slog.String("place", "Cookie read"), slog.String("error", err.Error()))
+			http.Error(w, "Unread cookie", http.StatusBadRequest)
+			return
+		}
+
+		thing.Owner = nickCookie.Value
+
 		err = s.manager.CreateThing(ctx, thing)
 
 		if err != nil {
