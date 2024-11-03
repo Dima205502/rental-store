@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"notifier/config"
 	"notifier/internal"
 	"os"
@@ -53,7 +54,10 @@ func main() {
 
 					fmt.Printf("Message = %+v\n", msg)
 
-					internal.Send(email, text)
+					if err := internal.Send(email, text); err != nil {
+						slog.Error("Send", slog.String("err", err.Error()))
+					}
+
 				case err := <-pc.Errors():
 					log.Printf("Ошибка при получении сообщения: %v", err)
 				}
